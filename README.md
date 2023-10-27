@@ -16,9 +16,6 @@ cd coaction-v1
 
 pip install -r requirements.txt
 
-## Create a new SQLite database file:
-
-touch coaction-v1.db
 
 ## Start the web server:
 
