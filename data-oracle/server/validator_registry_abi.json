@@ -1,0 +1,295 @@
+[
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_CITAddress",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "validator",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "CommissionConverted",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "validator",
+                "type": "address"
+            }
+        ],
+        "name": "Unsubscribed",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "validator",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "sourceBlockchain",
+                "type": "string"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "rebatePercentage",
+                "type": "uint256"
+            }
+        ],
+        "name": "ValidatorRegistered",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "validator",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "Withdrawn",
+        "type": "event"
+    },
+    {
+        "inputs": [],
+        "name": "CIT",
+        "outputs": [
+            {
+                "internalType": "contract IERC20",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "allValidators",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "sourceBlockchain",
+                "type": "string"
+            },
+            {
+                "internalType": "address",
+                "name": "operatorAddress",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "rewardsAddress",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "rebatePercentage",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bool",
+                "name": "isSubscribed",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "citBalances",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_commissionAmount",
+                "type": "uint256"
+            }
+        ],
+        "name": "convertCommissionToCIT",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getValidators",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "string",
+                        "name": "sourceBlockchain",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "operatorAddress",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "rewardsAddress",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "rebatePercentage",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "isSubscribed",
+                        "type": "bool"
+                    }
+                ],
+                "internalType": "struct ValidatorTreasury.ValidatorInfo[]",
+                "name": "",
+                "type": "tuple[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "string",
+                "name": "_sourceBlockchain",
+                "type": "string"
+            },
+            {
+                "internalType": "address",
+                "name": "_rewardsAddress",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_rebatePercentage",
+                "type": "uint256"
+            }
+        ],
+        "name": "registerValidator",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "unsubscribe",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "validators",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "sourceBlockchain",
+                "type": "string"
+            },
+            {
+                "internalType": "address",
+                "name": "operatorAddress",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "rewardsAddress",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "rebatePercentage",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bool",
+                "name": "isSubscribed",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "withdrawCIT",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+]

@@ -1,0 +1,170 @@
+[2023-08-03 18:13:18,933] INFO in util: child process calling self.run()
+[2023-08-03 18:13:21,898] INFO in util: child process calling self.run()
+[2023-08-03 18:14:49,622] INFO in util: process shutting down
+[2023-08-03 18:14:49,622] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:14:49,622] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:14:51,643] INFO in util: child process calling self.run()
+[2023-08-03 18:14:53,490] INFO in util: child process calling self.run()
+[2023-08-03 18:15:41,982] INFO in util: process shutting down
+[2023-08-03 18:15:41,982] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:15:41,982] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:15:42,340] INFO in util: child process calling self.run()
+[2023-08-03 18:15:55,510] INFO in util: process shutting down
+[2023-08-03 18:15:55,510] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:15:55,510] INFO in util: calling join() for process Process-1
+[2023-08-03 18:15:55,517] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:15:56,127] INFO in util: child process calling self.run()
+[2023-08-03 18:15:56,533] INFO in util: child process calling self.run()
+[2023-08-03 18:16:06,704] INFO in util: process shutting down
+[2023-08-03 18:16:06,704] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:16:06,704] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:16:08,527] INFO in util: child process calling self.run()
+[2023-08-03 18:16:08,902] INFO in util: child process calling self.run()
+[2023-08-03 18:16:35,048] INFO in util: process shutting down
+[2023-08-03 18:16:35,049] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:16:35,049] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:16:36,917] INFO in util: process shutting down
+[2023-08-03 18:16:36,917] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:16:36,917] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:17:27,049] INFO in util: process shutting down
+[2023-08-03 18:17:27,049] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:17:27,049] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:17:27,424] INFO in util: process shutting down
+[2023-08-03 18:17:27,424] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:17:27,424] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:31:56,369] INFO in util: child process calling self.run()
+[2023-08-03 18:31:58,140] INFO in util: child process calling self.run()
+[2023-08-03 18:33:08,240] INFO in util: process shutting down
+[2023-08-03 18:33:08,240] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:33:08,240] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:33:10,048] INFO in util: child process calling self.run()
+[2023-08-03 18:33:17,344] INFO in util: process shutting down
+[2023-08-03 18:33:17,344] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:33:17,344] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:33:19,729] INFO in util: child process calling self.run()
+[2023-08-03 18:33:21,767] INFO in util: child process calling self.run()
+[2023-08-03 18:33:55,095] INFO in util: process shutting down
+[2023-08-03 18:33:55,095] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:33:55,096] INFO in util: calling join() for process Process-1
+[2023-08-03 18:33:55,184] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:33:58,360] INFO in util: process shutting down
+[2023-08-03 18:33:58,360] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:33:58,360] INFO in util: calling join() for process Process-1
+[2023-08-03 18:33:58,362] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:34:00,345] INFO in util: child process calling self.run()
+[2023-08-03 18:34:05,036] INFO in util: child process calling self.run()
+[2023-08-03 18:35:12,893] INFO in util: process shutting down
+[2023-08-03 18:35:12,894] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:35:12,894] INFO in util: calling join() for process Process-1
+[2023-08-03 18:35:12,908] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:35:13,444] INFO in util: child process calling self.run()
+[2023-08-03 18:35:14,871] INFO in util: process shutting down
+[2023-08-03 18:35:14,871] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:35:14,871] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:35:15,401] INFO in util: child process calling self.run()
+[2023-08-03 18:35:15,984] INFO in util: child process calling self.run()
+[2023-08-03 18:36:04,359] INFO in util: process shutting down
+[2023-08-03 18:36:04,360] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:36:04,360] INFO in util: calling join() for process Process-1
+[2023-08-03 18:36:04,371] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:36:05,636] INFO in util: child process calling self.run()
+[2023-08-03 18:36:08,949] INFO in util: process shutting down
+[2023-08-03 18:36:08,949] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:36:08,949] INFO in util: calling join() for process Process-1
+[2023-08-03 18:36:08,951] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:36:09,662] INFO in util: child process calling self.run()
+[2023-08-03 18:36:10,392] INFO in util: child process calling self.run()
+[2023-08-03 18:37:51,521] INFO in util: process shutting down
+[2023-08-03 18:37:51,521] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:37:51,522] INFO in util: calling join() for process Process-1
+[2023-08-03 18:37:51,524] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:37:53,284] INFO in util: child process calling self.run()
+[2023-08-03 18:37:55,102] INFO in util: process shutting down
+[2023-08-03 18:37:55,102] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:37:55,102] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:37:57,238] INFO in util: child process calling self.run()
+[2023-08-03 18:37:59,705] INFO in util: child process calling self.run()
+[2023-08-03 18:39:23,207] INFO in util: process shutting down
+[2023-08-03 18:39:23,207] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:39:23,207] INFO in util: calling join() for process Process-1
+[2023-08-03 18:39:23,223] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:39:25,381] INFO in util: child process calling self.run()
+[2023-08-03 18:39:30,704] INFO in util: process shutting down
+[2023-08-03 18:39:30,704] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:39:30,704] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:39:33,137] INFO in util: child process calling self.run()
+[2023-08-03 18:39:34,168] INFO in util: process shutting down
+[2023-08-03 18:39:34,168] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:39:34,168] INFO in util: calling join() for process Process-1
+[2023-08-03 18:39:34,262] INFO in util: process shutting down
+[2023-08-03 18:39:34,262] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:39:34,262] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:39:38,097] INFO in util: child process calling self.run()
+[2023-08-03 18:39:40,740] INFO in util: child process calling self.run()
+[2023-08-03 18:42:04,069] INFO in util: process shutting down
+[2023-08-03 18:42:04,106] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:42:04,106] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:42:06,845] INFO in util: child process calling self.run()
+[2023-08-03 18:43:30,130] INFO in util: process shutting down
+[2023-08-03 18:43:30,130] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:43:30,130] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:43:31,317] INFO in util: child process calling self.run()
+[2023-08-03 18:44:03,086] INFO in util: process shutting down
+[2023-08-03 18:44:03,086] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:44:03,086] INFO in util: calling join() for process Process-1
+[2023-08-03 18:44:03,088] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:44:05,804] INFO in util: child process calling self.run()
+[2023-08-03 18:44:23,283] INFO in util: process shutting down
+[2023-08-03 18:44:23,283] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:44:23,283] INFO in util: calling join() for process Process-1
+[2023-08-03 18:44:23,285] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:44:24,798] INFO in util: child process calling self.run()
+[2023-08-03 18:44:29,249] INFO in util: process shutting down
+[2023-08-03 18:44:29,249] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:44:29,249] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:44:31,198] INFO in util: child process calling self.run()
+[2023-08-03 18:44:33,257] INFO in util: child process calling self.run()
+[2023-08-03 18:45:14,740] INFO in util: process shutting down
+[2023-08-03 18:45:14,740] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:45:14,740] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:45:15,072] INFO in util: child process calling self.run()
+[2023-08-03 18:48:28,904] INFO in util: process shutting down
+[2023-08-03 18:48:28,904] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:48:28,904] INFO in util: calling join() for process Process-1
+[2023-08-03 18:48:28,956] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:48:30,868] INFO in util: child process calling self.run()
+[2023-08-03 18:50:57,565] INFO in util: process shutting down
+[2023-08-03 18:50:57,565] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:50:57,566] INFO in util: calling join() for process Process-1
+[2023-08-03 18:50:57,568] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:50:57,902] INFO in util: child process calling self.run()
+[2023-08-03 18:51:12,990] INFO in util: process shutting down
+[2023-08-03 18:51:12,990] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:51:12,991] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:51:13,312] INFO in util: child process calling self.run()
+[2023-08-03 18:51:18,365] INFO in util: process shutting down
+[2023-08-03 18:51:18,365] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:51:18,365] INFO in util: calling join() for process Process-1
+[2023-08-03 18:51:18,367] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:51:18,703] INFO in util: child process calling self.run()
+[2023-08-03 18:51:44,890] INFO in util: process shutting down
+[2023-08-03 18:51:44,891] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:51:44,891] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:51:45,436] INFO in util: process shutting down
+[2023-08-03 18:51:45,436] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:51:45,436] INFO in util: calling join() for process Process-1
+[2023-08-03 18:51:45,444] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:53:04,364] INFO in util: child process calling self.run()
+[2023-08-03 18:53:06,248] INFO in util: child process calling self.run()
+[2023-08-03 18:53:48,276] INFO in util: process shutting down
+[2023-08-03 18:53:48,276] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:53:48,276] INFO in util: calling join() for process Process-1
+[2023-08-03 18:53:48,278] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:53:50,360] INFO in util: child process calling self.run()
+[2023-08-03 18:58:21,351] INFO in util: process shutting down
+[2023-08-03 18:58:21,351] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:58:21,352] DEBUG in util: running the remaining "atexit" finalizers
+[2023-08-03 18:58:28,133] INFO in util: process shutting down
+[2023-08-03 18:58:28,133] DEBUG in util: running all "atexit" finalizers with priority >= 0
+[2023-08-03 18:58:28,133] INFO in util: calling join() for process Process-1
+[2023-08-03 18:58:28,185] DEBUG in util: running the remaining "atexit" finalizers

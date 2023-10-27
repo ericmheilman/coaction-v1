@@ -1,0 +1,25 @@
+delegation_responses:
+- balance:
+    amount: "36734675181"
+    denom: ustrd
+  delegation:
+    delegator_address: stride1qsyl388u5a749e54uf5v0znz0rg34jgqgs03e4
+    shares: "36734675181.000000000000000000"
+    validator_address: stridevaloper1r7r9cse3yexuyl3860w9na0pfxct6fdgzxz86f
+- balance:
+    amount: "10000000"
+    denom: ustrd
+  delegation:
+    delegator_address: stride1r7r9cse3yexuyl3860w9na0pfxct6fdgpnxmkv
+    shares: "10000000.000000000000000000"
+    validator_address: stridevaloper1r7r9cse3yexuyl3860w9na0pfxct6fdgzxz86f
+- balance:
+    amount: "323599813"
+    denom: ustrd
+  delegation:
+    delegator_address: stride1u6fwhegzsm3x8u5vp9hlg3jtxyjlmexmxd3ea6
+    shares: "323599813.000000000000000000"
+    validator_address: stridevaloper1r7r9cse3yexuyl3860w9na0pfxct6fdgzxz86f
+pagination:
+  next_key: null
+  total: "0"

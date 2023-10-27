@@ -1,0 +1,15 @@
+[2023-09-12 19:42:52,256] DEBUG in app: 656331     Graph     staked by   16 delegators with value of $52307
+[2023-09-12 19:42:54,372] DEBUG in app: Error: Could not retrieve LPT data
+[2023-09-12 19:42:54,637] DEBUG in app: 56103      Tenderize staked by 1000 delegators with value of $336054
+[2023-09-12 19:42:55,307] DEBUG in app: 6237       Akash     staked by    9 delegators with value of $5693
+[2023-09-12 19:42:56,040] DEBUG in app: 37257      Stride    staked by    4 delegators with value of $30856
+[2023-09-12 19:42:57,661] DEBUG in app: 16754      Kava      staked by    2 delegators with value of $15295
+[2023-09-12 19:42:58,196] DEBUG in app: 55865      Mars      staked by    6 delegators with value of $3521
+[2023-09-12 19:42:58,587] DEBUG in app: 150001     Fetch.ai  staked by    2 delegators with value of $34040
+[2023-09-12 19:45:10,190] DEBUG in app: Error: Could not retrieve  CUDOS data
+[2023-09-12 19:45:10,215] DEBUG in app: Error: Could not retrieve  Cheqd data
+[2023-09-12 19:45:10,216] DEBUG in app: Total stake:        $477766
+[2023-09-12 19:45:10,216] DEBUG in app: Total delegators:      1039
+[2023-09-12 19:45:10,216] DEBUG in app: Populating leaderboard...
+[2023-09-12 19:45:10,216] DEBUG in app: Tenderize address rewards: $0
+[2023-09-12 19:45:10,220] DEBUG in app: Leaderboard Updated

@@ -1,0 +1,9 @@
+	modified:   ../package-lock.json
+	modified:   ../package.json
+	modified:   app.py
+	modified:   flask_app.log
+	modified:   flask_app.log.1
+	deleted:    leaderboard.db
+	modified:   venv/bin/activate.csh
+	modified:   venv/bin/activate.fish
+	deleted:    venv/bin/pip3.10
