@@ -1,16 +1,16 @@
 # Coaction V1
 This repository is the first iteration (still a work in progress) of the Coaction protocol. Coaction is a novel decentralized cross-chain validator group aggregator that will allow any validator to tokenize through the Coaction Infrastructure Token. Delegators and validators alike will earn CIT by validating / delegating within our network and that CIT will be burnable for boosted staking rewards. CIT will eventually be protocol agnostic but at the beginning will be live on only The Graph and the Livepeer network. 
 
-This repository consists of a flask / react web application that hosts a series of smart contracts and python powered data oracles that enable it's core functionalities. The native CIT token will be deployed on the Arbitrum network. If you would like to contribute, or are interested in learning more, please feel free to contact me at max@coaction.network. 
+This repository consists of a flask / react web application that hosts a series of smart contracts and python powered data oracles that enable it's core functionalities. It also hosts a leaderboard that is capable of displaying various key economic metrics from a range of network participants. The native CIT token will be deployed on the Arbitrum network. If you would like to contribute, or are interested in learning more, please feel free to contact me at max@coaction.network. 
 
 ## Installation
 Clone the repository to your local machine:
 
-git clone https://github.com/ericmheilman/leaderboard.git
+git clone https://github.com/ericmheilman/coaction-v1.git
 
 ## Navigate to the project directory:
 
-cd leaderboard
+cd coaction-v1
 
 ## Install the required Python packages:
 
@@ -18,7 +18,7 @@ pip install -r requirements.txt
 
 ## Create a new SQLite database file:
 
-touch leaderboard.db
+touch coaction-v1.db
 
 ## Start the web server:
 
