@@ -1,5 +1,7 @@
-# Leaderboard Project
-The Leaderboard project is a web application that displays a weekly leaderboard of the top delegators for three different cryptocurrency networks. The application retrieves data from The Graph, Livepeer, and Osmosis using their respective GraphQL APIs, calculates the total staked value for each delegator, and updates a SQLite database with the scores. The top 500 delegators are displayed on the leaderboard.
+# Coaction V1
+This repository is the first iteration (still a work in progress) of the Coaction protocol. Coaction is a novel decentralized cross-chain validator group aggregator that will allow any validator to tokenize through the Coaction Infrastructure Token. Delegators and validators alike will earn CIT by validating / delegating within our network and that CIT will be burnable for boosted staking rewards. CIT will eventually be protocol agnostic but at the beginning will be live on only The Graph and the Livepeer network. 
+
+This repository consists of a flask / react web application that hosts a series of smart contracts and python powered data oracles that enable it's core functionalities. The native CIT token will be deployed on the Arbitrum network. If you would like to contribute, or are interested in learning more, please feel free to contact me at max@coaction.network. 
 
 ## Installation
 Clone the repository to your local machine:
