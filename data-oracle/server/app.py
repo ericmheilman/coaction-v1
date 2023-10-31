@@ -8,40 +8,39 @@ import time
 from decimal import Decimal
 from logging.handlers import RotatingFileHandler
 from os import environ
+from dotenv import load_dotenv
 
 # Third-party Imports
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 from web3 import Web3
 import schedule
+import api_utils
 
-from api_utils import DataSource, get_stake_data, get_validators, get_deposits, get_grt_validators, get_lpt_validators, get_max_rebate, calculate_price_by_blockchain, calculate_rate_by_blockchain, generate_summary, update_leaderboard, fetch_prices, read_env_var_as_float, get_db_connection, close_db_connection
-# Initialize Flask App and Configuration
+from api_utils import treasury_contract, grt_price, lpt_price
 app = Flask(__name__, static_folder="../build", template_folder="../build")
 CORS(app)
+load_dotenv()
 
-e = 'generic error'
 
+LOG_LEVEL = logging.WARNING
 # Create a lock object
 lock = threading.Lock()
 
 # Set up logging
 log_formatter = logging.Formatter(
     "[%(asctime)s] %(levelname)s in %(module)s: %(message)s")
-log_handler = RotatingFileHandler(
-    "/home/ubuntu/leaderboard/server/flask_app.log", maxBytes=100000000, backupCount=1
-)
+log_handler = RotatingFileHandler(environ.get("FLASK_LOG"), maxBytes=100000000, backupCount=1)
 # Set up a logger for the main process
-log_handler.setLevel(logging.DEBUG)
+log_handler.setLevel(LOG_LEVEL)
 log_handler.setFormatter(log_formatter)
 app.logger.addHandler(log_handler)
-app.logger.setLevel(logging.DEBUG)
+app.logger.setLevel(LOG_LEVEL)
 
 # Set up a custom logger for the repeating task process
 task_logger = logging.getLogger("repeating_task_logger")
-task_logger.setLevel(logging.DEBUG)
-task_log_handler = logging.FileHandler(
-    "/home/ubuntu/leaderboard/server/task.log")
+task_logger.setLevel(LOG_LEVEL)
+task_log_handler = logging.FileHandler(environ.get("TASK_LOG"))
 task_log_formatter = logging.Formatter(
     "[%(asctime)s] %(levelname)s in %(module)s: %(message)s")
 task_log_handler.setFormatter(task_log_formatter)
@@ -50,21 +49,19 @@ task_logger.addHandler(task_log_handler)
 # Flag to track whether the job is scheduled
 job_scheduled = False
 
-GRT_DENOM = read_env_var_as_float("GRT_DENOM_EXP", 18)
-LPT_DENOM = read_env_var_as_float("LPT_DENOM_EXP", 1)
-TLPT_DENOM = read_env_var_as_float("TLPT_DENOM_EXP", 18)
-OSMO_DENOM = read_env_var_as_float("OSMO_DENOM_EXP", 6)
-AKASH_DENOM = read_env_var_as_float("AKASH_DENOM_EXP", 6)
-STRIDE_DENOM = read_env_var_as_float("STRIDE_DENOM_EXP", 6)
-KAVA_DENOM = read_env_var_as_float("KAVA_DENOM_EXP", 6)
-MARS_DENOM = read_env_var_as_float("MARS_DENOM_EXP", 6)
-FETCH_DENOM = read_env_var_as_float("FETCH_DENOM_EXP", 18)
-CUDOS_DENOM = read_env_var_as_float("CUDOS_DENOM_EXP", 18)
-CHEQD_DENOM = read_env_var_as_float("CHEQD_DENOM_EXP", 9)
+GRT_DENOM = api_utils.read_env_var_as_float("GRT_DENOM_EXP", 18)
+LPT_DENOM = api_utils.read_env_var_as_float("LPT_DENOM_EXP", 1)
+TLPT_DENOM = api_utils.read_env_var_as_float("TLPT_DENOM_EXP", 18)
+OSMO_DENOM = api_utils.read_env_var_as_float("OSMO_DENOM_EXP", 6)
+AKASH_DENOM = api_utils.read_env_var_as_float("AKASH_DENOM_EXP", 6)
+STRIDE_DENOM = api_utils.read_env_var_as_float("STRIDE_DENOM_EXP", 6)
+KAVA_DENOM = api_utils.read_env_var_as_float("KAVA_DENOM_EXP", 6)
+MARS_DENOM = api_utils.read_env_var_as_float("MARS_DENOM_EXP", 6)
+FETCH_DENOM = api_utils.read_env_var_as_float("FETCH_DENOM_EXP", 18)
+CUDOS_DENOM = api_utils.read_env_var_as_float("CUDOS_DENOM_EXP", 18)
+CHEQD_DENOM = api_utils.read_env_var_as_float("CHEQD_DENOM_EXP", 9)
 
 # Function to schedule the job if it's not already scheduled
-
-
 def schedule_job():
     global job_scheduled
     if not job_scheduled:
@@ -73,12 +70,9 @@ def schedule_job():
         print("Job scheduled")
 
 # Home page
-
-
 @app.route("/")
 def index():
     return render_template("index.html")
-
 
 def repeating_task():
     app.logger.debug("Starting repeating_task function.")
@@ -88,156 +82,68 @@ def repeating_task():
         start_time = time.time()
         delegator_stakes = {}
         prices = {}
+        active_networks = ['LPT','GRT']
         try:
             with lock:
-                app.logger.debug("Acquired lock.")
                 with app.app_context():
-                    app.logger.debug("Entered app context.")
-                    prices = fetch_prices()
-                    deposits = get_deposits()
-                    app.logger.debug(f"Deposits Y: {deposits}")
+                    prices = api_utils.fetch_prices()
+                    deposits = api_utils.get_deposits()
+                    app.logger.debug(f'Deposits retrieved: {deposits}')
+                    if prices and deposits:
+                        app.logger.debug('Checking if prices and deposits are present.')
+                    
+                        validators = api_utils.get_validators()
+                        app.logger.debug(f'Validators retrieved: {validators}')
+                        app.logger.warning(f'Validators retrieved: {validators}')
 
-                    app.logger.debug("Fetched prices: {}".format(prices))
-                    if prices:
-                        app.logger.debug(
-                            "Prices exist, proceeding to get stake data.")
+                        minted_tokens = api_utils.decay_amount() / (10 ** 18)
+                        app.logger.debug(f'Minted tokens calculated: {minted_tokens}')
+                        app.logger.warning(f'Minted tokens calculated: {minted_tokens}')
 
-                        # Example debug statement before calling get_stake_data for GRT
-                        app.logger.debug("Getting GRT stake data...")
-                        validators = get_validators()
-                        app.logger.debug(f"Validators X: {validators}")
+                        deposits = api_utils.get_deposits()
+                        app.logger.debug(f'Deposits retrieved: {deposits}')
+                        app.logger.warning(f'Deposits retrieved: {deposits}')
 
-                        grt_validators = get_grt_validators()
-                        for val in grt_validators:
-                            # Check if the validator address needs to be switched
-                            if val == "0xd365FdC4535626464A69cADA251853654546816f":
-                                val = "0x07ca020fdde5c57c1c3a783befdb08929cf77fec"
-                            app.logger.debug("GRT Validator:" + str(val))
-                            root_query = environ.get("ROOT_GRT_QUERY") % val
-                            get_stake_data(
-                                delegator_stakes, prices,
-                                environ.get("GRT_SYMBOL"), environ.get("GRT_ID"),
-                                environ.get("GRT_URL"), root_query,
-                                denom=GRT_DENOM, source=DataSource.GRT
-                            )
-                        app.logger.debug("Fetched GRT stake data.")
-                        
-                        app.logger.debug("Getting LPT stake data...")
-                        lpt_validators = get_lpt_validators()
-                        for val in lpt_validators:
-                            if val == "0x61977B07824512e6AA91d47105B57a5F04C5f4d2":
-                                val = "0x4a1c83b689816e40b695e2f2ce8fc21229076e74"
-                            root_query = environ.get("ROOT_LPT_QUERY") % val
-                            get_stake_data(
-                                delegator_stakes, prices,
-                                environ.get("LPT_SYMBOL"), environ.get("LPT_ID"),
-                                environ.get("LPT_URL"), root_query,
-                                denom=LPT_DENOM, source=DataSource.LPT,
-                                special_address=environ.get("TENDERIZE_ADDRESS")
-                            )
-                        app.logger.debug("Fetched LPT stake data.")
-                        
-                        # Debug statement for TLPT
-                        app.logger.debug("Getting TLPT stake data...")
-                        get_stake_data(
-                            delegator_stakes, prices,
-                            environ.get("LPT_SYMBOL"), environ.get("TLPT_ID"),
-                            environ.get("TLPT_URL"), environ.get("TLPT_QUERY"),
-                            denom=TLPT_DENOM, source=DataSource.TLPT
-                        )
-                        app.logger.debug("Fetched TLPT stake data.")
-                        app.logger.debug(
-                            "tlpt delegator data: " + str(delegator_stakes))
+                        for validator in validators:
+                            app.logger.debug(f'Processing validator: {validator}')
+                            app.logger.warning(f'Processing validator: {validator}')
 
-                        # Debug statement for Akash
-                        app.logger.debug("Getting Akash stake data...")
-                        get_stake_data(
-                            delegator_stakes, prices,
-                            environ.get("AKASH_SYMBOL"), environ.get(
-                                "AKASH_ID"),
-                            environ.get("AKASH_URL"), None,
-                            denom=AKASH_DENOM, source=DataSource.COSMOS, method='GET'
-                        )
-                        app.logger.debug("Fetched Akash stake data.")
+                            deposit = api_utils.get_validator_deposit(validator, deposits)
+                            app.logger.debug(f'Deposit retrieved : {deposit}')
+                            app.logger.warning(f'Deposit retrieved : {deposit}')
 
-                        # Cosmos data (Stride as another example)
-                        app.logger.debug("Fetching Stride stake data...")
-                        get_stake_data(
-                            delegator_stakes, prices,
-                            environ.get("STRIDE_SYMBOL"), environ.get(
-                                "STRIDE_ID"),
-                            environ.get("STRIDE_URL"), None,
-                            denom=STRIDE_DENOM, source=DataSource.COSMOS, method='GET'
-                        )
-                        app.logger.debug("Fetched Stride stake data.")
+                            delegators = api_utils.get_delegator_data(validator)
+                            
+                            app.logger.debug(f'Delegator response retrieved : {delegators}')
+                            app.logger.warning(f'Delegator response retrieved : {delegators}')
 
-                        # Cosmos data (Kava as another example)
-                        app.logger.debug("Fetching Kava stake data...")
-                        get_stake_data(
-                            delegator_stakes, prices,
-                            environ.get("KAVA_SYMBOL"), environ.get("KAVA_ID"),
-                            environ.get("KAVA_URL"), None,
-                            denom=KAVA_DENOM, source=DataSource.COSMOS, method='GET'
-                        )
-                        app.logger.debug("Fetched Kava stake data.")
+                            weighted_delegators = api_utils.calculate_delegator_weights(delegators, validator)
+                            app.logger.debug(f'Weighted delegators calculated : {weighted_delegators}')
+                            app.logger.warning(f'Weighted delegators calculated : {weighted_delegators}')
 
-                        # Cosmos data (Mars as another example)
-                        app.logger.debug("Fetching Mars stake data...")
-                        get_stake_data(
-                            delegator_stakes, prices,
-                            environ.get("MARS_SYMBOL"), environ.get("MARS_ID"),
-                            environ.get("MARS_URL"), None,
-                            denom=MARS_DENOM, source=DataSource.COSMOS, method='GET'
-                        )
-                        app.logger.debug("Fetched Mars stake data.")
+                            token_allocation = api_utils.calculate_token_allocation(deposit, validator, minted_tokens)
+                            app.logger.debug(f'Token allocation calculated : {token_allocation}')
+                            app.logger.warning(f'Token allocation calculated : {token_allocation}')
 
-                        # Cosmos data (Fetch as another example)
-                        app.logger.debug("Fetching Fetch stake data...")
-                        get_stake_data(
-                            delegator_stakes, prices,
-                            environ.get("FETCH_SYMBOL"), environ.get(
-                                "FETCH_ID"),
-                            environ.get("FETCH_URL"), None,
-                            denom=FETCH_DENOM, source=DataSource.COSMOS, method='GET'
-                        )
-                        app.logger.debug("Fetched Fetch stake data.")
+                            delegator_rewards = api_utils.calculate_delegator_rewards(weighted_delegators, token_allocation)
+                            app.logger.debug(f'Delegator rewards calculated : {delegator_rewards}')
+                            app.logger.warning(f'Delegator rewards calculated : {delegator_rewards}')
 
-                        # Cosmos data (Cudos as another example)
-                        app.logger.debug("Fetching Cudos stake data...")
-                        get_stake_data(
-                            delegator_stakes, prices,
-                            environ.get("CUDOS_SYMBOL"), environ.get(
-                                "CUDOS_ID"),
-                            environ.get("CUDOS_URL"), None,
-                            denom=CUDOS_DENOM, source=DataSource.COSMOS, method='GET'
-                        )
-                        app.logger.debug("Fetched Cudos stake data.")
-
-                        # Cosmos data (Cheqd as another example)
-                        app.logger.debug("Fetching Cheqd stake data...")
-                        get_stake_data(
-                            delegator_stakes, prices,
-                            environ.get("CHEQD_SYMBOL"), environ.get(
-                                "CHEQD_ID"),
-                            environ.get("CHEQD_URL"), None,
-                            denom=CHEQD_DENOM, source=DataSource.COSMOS, method='GET'
-                        )
-                        app.logger.debug("Fetched Cheqd stake data.")
-                        
-                        update_leaderboard(delegator_stakes, prices)
-
-                        generate_summary()
+                            txn_hash = api_utils.distribute_tokens(delegator_rewards)
+                            app.logger.debug(f'Delegator rewards {delegator_rewards}')
+                            app.logger.debug(f'Transaction hash: {txn_hash}')
+                            app.logger.debug(f'Validator {validator} processed.')
                         # Calculate the time taken for the data calculation and leaderboard update
                         elapsed_time = time.time() - start_time
 
                         # Calculate the time remaining until the next update (60 seconds - elapsed time)
-                        time_remaining = max(60 - elapsed_time, 0)
+                        time_remaining = max(3600 - elapsed_time, 0)
 
                         # Sleep for the time remaining before updating again
                         time.sleep(time_remaining)
         except Exception as e:
             app.logger.exception("Error in repeating task")
-            time.sleep(60)
+            time.sleep(3600)
 
 
 @app.route('/leaderboard')
@@ -262,30 +168,45 @@ def leaderboard():
         app.logger.debug(f"SQLite error in /leaderboard route: {e}")
         return jsonify({"error": str(e)}), 500
 
-@app.route('/placeholder-data')
-def placeholder_data():
-    app.logger.debug("Entering /leaderboard route")
+@app.route('/reward-deposits')
+def reward_deposits():
     try:
-        app.logger.debug("Connecting to SQLite database...")
-        conn = sqlite3.connect('leaderboard.db')
-        c = conn.cursor()
-        app.logger.debug("Executing SQL query to fetch leaderboard data...")
-        c.execute(
-            "SELECT * FROM leaderboard ORDER BY total_points DESC LIMIT 500")
+        app.logger.debug("Fetching test...")
 
-        rows = c.fetchall()
-        app.logger.debug(f"Fetched {len(rows)} rows.")
-        leaderboard_data = [{'address': address, 'protocol': blockchain, 'treasury_contribution': treasury_contribution, 'delegated_stake': delegated_stake, 'daily_hour_change': daily_hour_change, 'total_points': total_points}
-                            for address, blockchain,treasury_contribution, delegated_stake, daily_hour_change, total_points in rows]
-        app.logger.debug("Closing SQLite database connection.")
-        conn.close()
-        app.logger.debug("Returning leaderboard data.")
-        return jsonify(leaderboard_data)
-    except sqlite3.Error as e:
-        app.logger.debug(f"SQLite error in /leaderboard route: {e}")
+        app.logger.debug("Initializing Web3...")
+        w3 = Web3(Web3.HTTPProvider(environ.get("INFURA_API")))
+        with open(environ.get("VALIDATOR_ABI_JSON"), "r") as f:
+            VAL_REGISTRY_ABI = json.load(f)
+        with open(environ.get("TREASURY_ABI_JSON"), "r") as f:
+            TREASURY_ABI = json.load(f)
+        contract = treasury_contract()
+        if w3.is_connected():
+            app.logger.debug("Web3 is connected. Fetching validators...")
+            validator_addresses = api_utils.get_validator_addresses()  # Call to get_validators function
+            if validator_addresses is not None:
+                all = []
+                all = contract.functions.getAllDeposits(validator_addresses).call()
+                app.logger.debug(f"Deposited all: {all}")
+                for deposit in all:
+                    validator = deposit[0]
+                    grt_deposit = deposit[1]
+                    lpt_deposit = deposit[2]
+                return jsonify("testing")
+            else:
+                app.logger.error("Failed to fetch validator addresses")
+
+        return jsonify("test")
+
+    except ValueError as e:
+        error_message = str(e)
+        if "execution reverted" in error_message:
+            app.logger.debug(f"Transaction failed: {error_message}")
+        return jsonify({"error": "Failed to distribute rewards"}), 500
+
+    except Exception as e:
+        app.logger.debug(f"An error occurred: {str(e)}")
         return jsonify({"error": str(e)}), 500
-
-
+    
 @app.route('/distribute')
 def distribute():
     # Schedule the job to run every moth
@@ -309,7 +230,8 @@ def distribute():
         w3 = Web3(Web3.HTTPProvider(environ.get("INFURA_API")))
 
         app.logger.debug("Setting distribution address...")
-        distribution_address = environ.get("DISTRIBUTION_ADDRESS")
+        distribution_address = env
+        iron.get("DISTRIBUTION_ADDRESS")
 
         app.logger.debug("Setting token address...")
         token_address = environ.get("TOKEN_ADDRESS")
@@ -320,25 +242,26 @@ def distribute():
         app.logger.debug("Setting treasury address...")
         treasury_address = environ.get("TREASURY_ADDRESS")
 
-        app.logger.debug("Initializing contract...")
+        app.logger.debug("Initializing contract1...")
 
-        with open("/home/ubuntu/leaderboard/server/token_abi.json", "r") as f:
+        with open(environ.get("TOKEN_ABI_JSON"), "r") as f:
             TOKEN_ABI = json.load(f)
 
-        with open("/home/ubuntu/leaderboard/server/distribution_abi.json", "r") as f:
+        with open(environ.get("DISTRIBUTION_ABI_JSON"), "r") as f:
             DISTRIBUTION_ABI = json.load(f)
 
-        with open("/home/ubuntu/leaderboard/server/validator_registry_abi.json", "r") as f:
+        with open(environ.get("VALIDATOR_ABI_JSON"), "r") as f:
             VAL_REGISTRY_ABI = json.load(f)
 
-        with open("/home/ubuntu/leaderboard/server/treasury_abi.json", "r") as f:
+        with open(environ.get("TREASURY_ABI_JSON"), "r") as f:
             TREASURY_ABI = json.load(f)
+
 
         distribution_contract = w3.eth.contract(
             address=distribution_address, abi=DISTRIBUTION_ABI)
         token_contract = w3.eth.contract(address=token_address, abi=TOKEN_ABI)
         val_registry_contract = w3.eth.contract(address=val_registry_address, abi=VAL_REGISTRY_ABI)
-        treasury_contract = w3.eth.contract(address=treasury_address, abi=TREASURY_ABI)
+        treasury_contract = treasury_contract()
 
         if w3.is_connected():
             app.logger.debug("Web3 is connected. Fetching decayed amount...")
@@ -378,9 +301,9 @@ def distribute():
                     reward = (
                         Decimal(row['treasury_contribution']) / 100) * (Decimal(decayed_amount))
                     total += reward
-                    app.logger.debug(f"Reward: {reward}")  # Corrected f-string
-                    app.logger.debug(f"Delegator weight: {delegator_weight}")  # Corrected f-string
-                    app.logger.debug(f"Total: {total}")  # Corrected f-strin
+                    app.logger.debug(f"Reward: {reward}")  
+                    app.logger.debug(f"Delegator weight: {delegator_weight}") 
+                    app.logger.debug(f"Total: {total}") 
                     app.logger.debug("Storing rewards...")
                     addresses[checksum_address] = int(reward)
 
@@ -399,7 +322,7 @@ def distribute():
             my_private_key = environ.get("MY_PRIVATE_KEY")
 
             for address, amount in addresses.items():
-                # Build the transaction to call setClaimableAmozZZzz-untzz
+                # Build the transaction to call setClaimableAmounts
                 transaction = token_contract.functions.setClaimableAmount(address, amount).build_transaction({
                     'chainId': 11155111,
                     'gas': 2000000,  # Adjust asssneeded
@@ -432,8 +355,6 @@ def distribute():
         return jsonify({"error": str(e)}), 500
 
 # Route to get treasury contribution by blockchain
-
-
 @app.route('/max-rebate', methods=['GET'])
 def max_rebate():
     app.logger.debug("Entering /max-rebate route")
@@ -448,13 +369,13 @@ def max_rebate():
             return jsonify({"error": "Missing 'blockchain' or 'blockchain' parameter"}), 400
 
         app.logger.debug("Connecting to database for max rebate...")
-        conn = get_db_connection()
+        conn = api_utils.get_db_connection()
         app.logger.debug("Fetching max rebate from database...")
-        treasury_contribution_value = get_max_rebate(
+        treasury_contribution_value = api_utils.get_max_rebate(
             blockchain, blockchain, conn)
         app.logger.debug(f"Max rebate fetched: {treasury_contribution_value}")
         app.logger.debug("Closing database .")
-        close_db_connection(conn)
+        api_utils.close_db_connection(conn)
 
         response_data = {
             "max-rebate": treasury_contribution_value / 2
@@ -488,7 +409,6 @@ def fetch_data():
     except sqlite3.Error as e:
         app.logger.debug(f"SQLite error in /data route: {e}")
         return jsonify({"error": str(e)}), 500
-
 
 @app.route('/all-data')
 def all_data():
@@ -533,7 +453,7 @@ def percentage_treasury_contribution():
     try:
 
         conn = sqlite3.connect('leaderboard.db')
-        prices = fetch_prices()
+        prices = api_utils.fetch_prices()
 
         c = conn.cursor()
 
@@ -560,7 +480,7 @@ def percentage_treasury_contribution():
                 row_dict[column_names[i]] = row[i]
 
             # Calculate rate and convert treasury contribution to dollars
-            price = calculate_price_by_blockchain(
+            price = api_utils.calculate_price_by_blockchain(
                 prices, row_dict['blockchain'])
 
             treasury_dollars = row_dict['treasury_contribution'] * price
@@ -687,3 +607,4 @@ if __name__ == '__main__':
         app.run(host='0.0.0.0', port='5000', debug=True, use_reloader=False)
     except Exception as e:
         app.logger.debug(f"Exception in main function: {e}")
+
