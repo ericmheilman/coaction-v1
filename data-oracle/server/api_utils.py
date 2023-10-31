@@ -10,8 +10,9 @@ from flask_cors import CORS
 from web3 import Web3
 from decimal import Decimal
 from logging.handlers import RotatingFileHandler
+from dotenv import load_dotenv
 
-e = 'generic error'
+load_dotenv()
 
 class DataSource(Enum):
     GRT = 1
@@ -54,54 +55,320 @@ def fetch_data(url, query, headers=None, method='POST'):
         return requests.get(url, headers=headers)
 
 
-def parse_data(response_text, source):
-    # app.logger.debug(f"Parsing data for {source.name}")
-    parsed_json = json.loads(response_text)
-    if source == DataSource.GRT:
+def parse_data(response_text, validator):
+    blockchain = validator[0]
+    # app.logger.debug(f"Parsing data for {blockchain.name}")
+    parsed_json = response_text
+    if blockchain == 'GRT':
         return parsed_json['data']['indexer']['delegators']
-    elif source == DataSource.LPT:
+    elif blockchain == 'LPT':
         return parsed_json['data']['transcoder']['delegators']
-    elif source == DataSource.TLPT:
-        # Flatten the nested 'users' list to match the format of the other data sources
-        deployments = parsed_json['data']['deployments']
-        return [user for deployment in deployments for user in deployment['users']]
-    elif source == DataSource.COSMOS:
-        return parsed_json.get('delegation_responses')
+    else:
+        return 'No JSON to parse'
+    
 
-def get_validators():
+def calculate_delegator_rewards(delegators, token_allocation):
+    result = []
+    for delegator in delegators:
+        tokens_mined = float(token_allocation) * delegator['weight']
+        # Store the address and weight in a dictionary
+        result.append({
+            'address': delegator['address'],
+            'amount':tokens_mined 
+        })
+    return result
+
+def assign_tokens(delegators, token_allocation):
+    result = []
+    for delegator in delegators:
+        tokens_mined = float(token_allocation) * delegator['weight']
+        # Store the address and weight in a dictionary
+        result.append({
+            'address': delegator['address'],
+            'amount':tokens_mined 
+        })
+    return result
+
+def distribute_tokens(addresses):
+    w3 = Web3(Web3.HTTPProvider(environ.get("INFURA_API")))
+    my_private_key = environ.get("MY_PRIVATE_KEY")
+    app.logger.debug("Setting sender address...")
+    sender_address = environ.get("SENDING_ADDRESS")
+    contract = token_contract()
+    formatted_addresses = []
+    distributed_tokens = []
+
+    for address in addresses:
+        formatted_addresses.append(Web3.to_checksum_address(address['address']))
+        distributed_tokens.append(int(address['amount']))
+    
+        # Get the current nonce
+    current_nonce = w3.eth.get_transaction_count(sender_address)
+
+    # Increment the nonce
+    next_nonce = current_nonce + 1
+        
+    # Build the transaction to call setClaimableAmounts
+    transaction = contract.functions.setClaimableAmounts(formatted_addresses,distributed_tokens).build_transaction({
+        'chainId': 11155111,
+        'gas': 2000000, 
+        'gasPrice': w3.to_wei('50', 'gwei'),
+        'nonce': next_nonce,
+    })
+
+    app.logger.debug("Signing transaction...")
+    signed_txn = w3.eth.account.sign_transaction(
+        transaction, my_private_key)
+
+    app.logger.debug("Sending transaction...")
+    txn_hash = w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+
+    app.logger.debug(f'Transaction hash: {txn_hash.hex()}')
+    return str(txn_hash.hex())
+'''
+def set_claimable(addresses, token_allocation):
+    w3 = Web3(Web3.HTTPProvider(environ.get("INFURA_API")))
+    app.logger.debug("Setting sender address...")
+    sender_address = environ.get("SENDING_ADDRESS")
+    my_private_key = environ.get("MY_PRIVATE_KEY")
+    contract = token_contract()
+    for address in addresses:
+
+        # Build the transaction to call setClaimableAmounts
+        checksum_address = Web3.to_checksum_address(address['address'])
+        payout =  int(address['amount'])
+        transaction = contract.functions.setClaimableAmount(checksum_address,payout).build_transaction({
+            'chainId': 11155111,
+            'gas': 50000, 
+            'gasPrice': w3.to_wei('50', 'gwei'),
+            'nonce': w3.eth.get_transaction_count(sender_address),
+        })
+
+    app.logger.debug("Signing transaction...")
+    signed_txn = w3.eth.account.sign_transaction(
+        transaction, my_private_key)
+
+    app.logger.debug("Sending transaction...")
+    txn_hash = w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+
+    app.logger.debug(f'Transaction hash: {txn_hash.hex()}')
+    return txn_hash.hex()
+'''
+def get_total_validator_stake(delegators, validator):
+    # Extract the blockchain type from the validator argument
+    blockchain = validator[0]
+    app.logger.warning(f"Delegate11111: {delegators}")
+   # Determine the token_id based on the blockchain type
+    if blockchain == 'LPT':
+        token_id = 'bondedAmount'
+    elif blockchain == 'GRT':
+        token_id = 'stakedTokens'
+    else:
+        raise ValueError(f'Unsupported blockchain type: {blockchain}')
+
+    # Initialize the total stake variable
+    total = 0
+    app.logger.warning(f"Type of delegators: {type(delegators)}")
+
+    # Check the type of delegators
+    if not isinstance(delegators, list):
+        app.logger.error(f"Expected delegators to be a list, got {type(delegators)}")
+        return 0
+    
+    
+    # Iterate through the delegators list and accumulate the total stake
+    for delegator in delegators:
+        if not isinstance(delegator, dict):
+            app.logger.error(f"Expected each delegator to be a dict, got {type(delegator)}: {delegator}")
+            continue
+        app.logger.warning(f"Type of delegator: {type(delegator)}")
+
+        app.logger.warning(f"Delegator-------: {delegator}")
+        app.logger.warning(f"Delegators: {delegators}")
+        # Ensure the token_id key exists in the delegator dictionary
+        # Convert the stake amount to float and add it to the total stake
+        total += float(delegator[token_id])
+
+    # Return the total stake
+    return total
+def calculate_delegator_weights(delegators, validator):
+    # Ensure total is a float for accurate division
+    total_validator_stake = get_total_validator_stake(delegators, validator)
+    blockchain = validator[0]
+    if blockchain == 'LPT':
+        token_id = 'bondedAmount'
+    elif blockchain == 'GRT':
+        token_id = 'stakedTokens'
+    
+    # Initialize an empty list to hold the result
+    result = []
+    if total_validator_stake == 0:
+        return result
+    # Iterate through the delegators list
+    for delegator in delegators:
+        # Convert bondedAmount to float for accurate division
+        bonded_amount = float(delegator[token_id])
+        
+        # Calculate the weight
+        weight = (bonded_amount / total_validator_stake) * 100
+        
+        # Store the address and weight in a dictionary
+        result.append({
+            'address': delegator['id'],
+            'weight': weight
+        })
+    
+    return result
+
+
+
+def assign_weights(delegators, total):
+    # Ensure total is a float for accurate division
+    total = float(total)
+    
+    # Initialize an empty list to hold the result
+    result = []
+    
+    # Iterate through the delegators list
+    for delegator in delegators:
+        # Convert bondedAmount to float for accurate division
+        bonded_amount = float(delegator['bondedAmount'])
+        
+        # Calculate the weight
+        weight = (bonded_amount / total) * 100
+        
+        # Store the address and weight in a dictionary
+        result.append({
+            'address': delegator['id'],
+            'weight': weight
+        })
+    
+    return result
+
+    
+def grt_deposit_value(grt):
+   return grt * grt_price()
+
+def grt_deposit_value(lpt):
+   return lpt * lpt_price()
+        
+def total_communal_deposits():
     try:
-        app.logger.debug("Fetching all validators..")
-        w3 = Web3(Web3.HTTPProvider(environ.get("INFURA_API")))
-
-        app.logger.debug("Setting validator subscription addess...")
-        val_registry_address = environ.get("VALIDATOR_REGISTRY")
-
-        app.logger.debug("Initializing contract...")
-        with open("/home/ubuntu/leaderboard/server/validator_registry_abi.json", "r") as f:
-            VAL_REGISTRY_ABI = json.load(f)
-        val_registry_contract = w3.eth.contract(address=val_registry_address, abi=VAL_REGISTRY_ABI)
-
-        if w3.is_connected():
-            app.logger.debug("Web3 is connected. Fetching validators...")
-            registered_validators = val_registry_contract.functions.getValidators().call()
-            app.logger.debug(f"Registered Validators: {registered_validators}")
-         
-            return registered_validators
-
-        else:
-            app.logger.debug("Web3 is not connected.")
-
-        return jsonify({"error": str('error 3')}), 500
+        app.logger.debug("Fetching test...")
+        contract = treasury_contract()
+        app.logger.debug("Web3 is connected. Fetching validators...")
+        app.logger.debug("Fetching LPT deposits...")
+        deposited_lpt = contract.functions.totalLPTDeposited().call()
+        app.logger.debug(f"Deposited LPT: {deposited_lpt}")
+        app.logger.debug("Fetching GRT deposits...")
+        deposited_grt = contract.functions.totalGRTDeposited().call()
+        app.logger.debug(f"Deposited GRT: {deposited_grt}")
+        grt_value = deposited_grt * grt_price()
+        app.logger.debug(f"GRT Value: {grt_value}")
+        lpt_value = deposited_lpt * lpt_price()
+        app.logger.debug(f"LPT Value: {lpt_value}")
+        total_communal_deposits = grt_value + lpt_value
+        return total_communal_deposits
 
     except ValueError as e:
         error_message = str(e)
         if "execution reverted" in error_message:
             app.logger.debug(f"Transaction failed: {error_message}")
-        return jsonify({"error": "Failed to fetch grt validators"}), 500
+        return jsonify({"error": "Failed to distribute rewards"}), 500
 
     except Exception as e:
         app.logger.debug(f"An error occurred: {str(e)}")
         return jsonify({"error": str(e)}), 500
+def get_validator_deposit(validator, deposits):
+    blockchain = validator[0]
+    total_validator_deposits = 0
+    for deposit in deposits:
+        if deposit[1] == blockchain:
+            total_validator_deposits += deposit[2]
+    return total_validator_deposits
+  
+def get_lpt_val_deposit(validator):
+    try:
+        validators = get_validator_addresses()
+        contract = treasury_contract()
+        app.logger.debug("Web3 is connected. Fetching deposits...")
+        lpt_deposits = contract.functions.getAllLPTDeposits(validators).call()
+        deposits = [deposit[1] for deposit in lpt_deposits if deposit[0] == validator[1]]
+        app.logger.debug(f"Registered lptvalidator deposits: {deposits}")
+        return deposits
+
+    except ValueError as e:
+        error_message = str(e)
+        if "execution reverted" in error_message:
+            app.logger.debug(f"Transaction failed: {error_message}")
+        return jsonify({"error": "Failed deposits"}), 500
+
+    except Exception as e:
+        app.logger.debug(f"An error occurred: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+def get_lpt_val_deposits():
+    try:
+        validators = get_validator_addresses()
+        contract = treasury_contract()
+        app.logger.debug("Web3 is connected. Fetching deposits...")
+        lpt_deposits = contract.functions.getAllLPTDeposits(validators).call()
+        deposits = [deposit[1] for deposit in lpt_deposits if deposit[1] != 0]
+        app.logger.debug(f"Registered lptvalidator deposits: {deposits}")
+        return deposits
+
+    except ValueError as e:
+        error_message = str(e)
+        if "execution reverted" in error_message:
+            app.logger.debug(f"Transaction failed: {error_message}")
+        return jsonify({"error": "Failed deposits"}), 500
+
+    except Exception as e:
+        app.logger.debug(f"An error occurred: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+def get_grt_val_deposits():
+    try:
+        validators = get_validator_addresses()
+        contract = treasury_contract()
+        app.logger.debug("Web3 is connected. Fetching deposits...")
+        grt_deposits = contract.functions.getAllGRTDeposits(validators).call()
+        deposits = [deposit[1] for deposit in grt_deposits if deposit[1] != 0]
+        app.logger.debug(f"Registered grtvalidator deposits: {deposits}")
+        return deposits
+
+    except ValueError as e:
+        error_message = str(e)
+        if "execution reverted" in error_message:
+            app.logger.debug(f"Transaction failed: {error_message}")
+        return jsonify({"error": "Failed deposits"}), 500
+
+    except Exception as e:
+        app.logger.debug(f"An error occurred: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    
+def get_grt_val_deposit(validator):
+    try:
+        validators = get_validator_addresses()
+        contract = treasury_contract()
+        app.logger.debug("Web3 is connected. Fetching deposits...")
+        grt_deposits = contract.functions.getAllGRTDeposits(validators).call()
+        deposits = [deposit[1] for deposit in grt_deposits if deposit[0] == validator[1]]
+        app.logger.debug(f"Registered grtvalidator deposits: {deposits}")
+        return deposits
+
+    except ValueError as e:
+        error_message = str(e)
+        if "execution reverted" in error_message:
+            app.logger.debug(f"Transaction failed: {error_message}")
+        return jsonify({"error": "Failed deposits"}), 500
+
+    except Exception as e:
+        app.logger.debug(f"An error occurred: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+def get_blockchain(validator):
+    return validator[0]
 
 def get_deposits():
     try:
@@ -113,16 +380,32 @@ def get_deposits():
         treasury_address = environ.get("TREASURY_ADDRESS")
 
         app.logger.debug("Initializing contract...")
-        with open("/home/ubuntu/leaderboard/server/treasury_abi.json", "r") as f:
+        with open(environ.get("TREASURY_ABI_JSON"), "r") as f:
             TREASURY_ABI = json.load(f)
         treasury_contract = w3.eth.contract(address=treasury_address, abi=TREASURY_ABI)
 
         if w3.is_connected():
-            app.logger.debug("Web3 is connected. Fetching deposits...")
-            registered_deposits = treasury_contract.functions.getAllDeposits(validators).call()
-            app.logger.debug(f"Registered deposits: {registered_deposits}")
-         
-            return registered_deposits
+            app.logger.debug("Web3 is connected. Fetching lpt deposits...")
+            registered_grt_deposits = treasury_contract.functions.getAllGRTDeposits(validators).call()
+            app.logger.debug(f"Registered grt deposits: {registered_grt_deposits}")
+            registered_lpt_deposits = treasury_contract.functions.getAllLPTDeposits(validators).call()
+           # registered_deposits = treasury_contract.functions.getAllDeposits(validators).call()
+         # Initialize an empty list to store consolidated deposits
+            consolidated_deposits = []
+
+            # Process GRT deposits
+            for deposit in registered_grt_deposits:
+                address, amount = deposit  # Unpack deposit tuple
+                consolidated_deposits.append((address, 'GRT', amount))
+
+            # Process LPT deposits
+            for deposit in registered_lpt_deposits:
+                address, amount = deposit  # Unpack deposit tuple
+                consolidated_deposits.append((address, 'LPT', amount))
+
+            # Now consolidated_deposits contains the desired formatted data
+            app.logger.debug(f"Consolidated deposits: {consolidated_deposits}")
+            return consolidated_deposits
 
         else:
             app.logger.debug("Web3 is not connected.")
@@ -139,17 +422,25 @@ def get_deposits():
         app.logger.debug(f"An error occurred: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+def calculate_token_allocation(deposit, validator, minted_tokens):
+    deposit_value = get_deposit_value(deposit, validator)
+    app.logger.debug(f"Deposit value: {deposit_value}")
+    total_deposit_value = get_total_deposit_value()
+    app.logger.debug(f"Total deposit value: {total_deposit_value}")
+    deposit_weight = float(deposit_value) / float(total_deposit_value)
+    token_allocation = deposit_weight * float(minted_tokens)
+    return token_allocation
 
 def get_validators():
     try:
         app.logger.debug("Fetching all validators..")
-        #w3 = Web3(Web3.HTTPProvider(environ.get("INFURA_API")))
-        w3 = Web3(Web3.HTTPProvider("https://eth-sepolia.g.alchemy.com/v2/ruITE4LBU-DGE-bY03e1FKUw-1NWhb2p"))
+        w3 = Web3(Web3.HTTPProvider(environ.get("INFURA_API")))
+
         app.logger.debug("Setting validator subscription addess...")
         val_registry_address = environ.get("VALIDATOR_REGISTRY")
 
         app.logger.debug("Initializing contract...")
-        with open("/home/ubuntu/leaderboard/server/validator_registry_abi.json", "r") as f:
+        with open(environ.get("VALIDATOR_ABI_JSON"), "r") as f:
             VAL_REGISTRY_ABI = json.load(f)
         val_registry_contract = w3.eth.contract(address=val_registry_address, abi=VAL_REGISTRY_ABI)
 
@@ -163,7 +454,7 @@ def get_validators():
         else:
             app.logger.debug("Web3 is not connected.")
 
-        return jsonify({"error": str('error 2')}), 500
+        return jsonify({"error": str(e)}), 500
 
     except ValueError as e:
         error_message = str(e)
@@ -190,7 +481,7 @@ def get_grt_validators():
         val_registry_address = environ.get("VALIDATOR_REGISTRY")
 
         app.logger.debug("Initializing contract...")
-        with open("/home/ubuntu/leaderboard/server/validator_registry_abi.json", "r") as f:
+        with open(environ.get("VALIDATOR_ABI_JSON"), "r") as f:
             VAL_REGISTRY_ABI = json.load(f)
         val_registry_contract = w3.eth.contract(address=val_registry_address, abi=VAL_REGISTRY_ABI)
 
@@ -208,7 +499,7 @@ def get_grt_validators():
         else:
             app.logger.debug("Web3 is not connected.")
 
-        return jsonify({"error": str('e4')}), 500
+        return jsonify({"error": str(e)}), 500
 
     except ValueError as e:
         error_message = str(e)
@@ -229,7 +520,7 @@ def get_lpt_validators():
         val_registry_address = environ.get("VALIDATOR_REGISTRY")
 
         app.logger.debug("Initializing contract...")
-        with open("/home/ubuntu/leaderboard/server/validator_registry_abi.json", "r") as f:
+        with open(environ.get("VALIDATOR_ABI_JSON"), "r") as f:
             VAL_REGISTRY_ABI = json.load(f)
         val_registry_contract = w3.eth.contract(address=val_registry_address, abi=VAL_REGISTRY_ABI)
 
@@ -238,7 +529,7 @@ def get_lpt_validators():
             registered_validators = val_registry_contract.functions.getValidators().call()
             app.logger.debug(f"Registered Validators: {registered_validators}")
             # Filter the list to include only lpt validators
-            lpt_validators = [validator for validator in registered_validators if validator[0] == 'lpt']
+            lpt_validators = [validator for validator in registered_validators if validator[0] == 'LPT']
 
             # Extract the addresses of lpt validators
             lpt_addresses = [validator[1] for validator in lpt_validators]
@@ -247,28 +538,103 @@ def get_lpt_validators():
         else:
             app.logger.debug("Web3 is not connected.")
 
-        return jsonify({"error": str('error1')}), 500
+        return jsonify({"error": str(e)}), 500
 
     except ValueError as e:
         error_message = str(e)
         if "execution reverted" in error_message:
-            app.logger.debug(f"Transaction failed: {erroressage}")
+            app.logger.debug(f"Transaction failed: {error_message}")
         return jsonify({"error": "Failed to fetch lpt validators"}), 500
 
     except Exception as e:
         app.logger.debug(f"An error occurred: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+def get_delegator_data(validator):
+    blockchain = validator[0]
+    if blockchain == 'LPT':
+        return get_lpt_delegators(validator)
+    elif blockchain == 'GRT':
+        return get_grt_delegators(validator)
+
+def get_lpt_delegators(validator,headers=None,method='POST'):
+    address = validator[1]
+    if address == "0x61977B07824512e6AA91d47105B57a5F04C5f4d2":
+        address = "0x4a1c83b689816e40b695e2f2ce8fc21229076e74"
+    query = environ.get("ROOT_LPT_QUERY") % address
+    app.logger.debug(f"Query: {query}")
+    url = environ.get("LPT_URL")
+    total_tokens = 0
+    try:
+        response = fetch_data(url, query, headers, method)
+        app.logger.debug(response)
+        delegators = parse_lpt_data(response.text)    
+      #  delegators = [response.json() for response in delegators_response]
+    
+        for delegator in delegators:
+            app.logger.debug(f"Delegator: {delegator['id']}")
+            app.logger.debug(f"Delegator: {delegator['bondedAmount']}")
+            total_tokens += float(delegator['bondedAmount'])
+        return delegators
+    except Exception as e:
+        app.logger.debug(f"An error occurred: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+def get_grt_delegators(validator, headers=None, method='POST'):
+    address = validator[1].split("-")[0]
+    if address == "0xd365FdC4535626464A69cADA251853654546816f":
+        address = "0x07ca020fdde5c57c1c3a783befdb08929cf77fec"
+    query = environ.get("ROOT_GRT_QUERY") % address
+    url = environ.get("GRT_URL")
+    grt_denom = environ.get('GRT_DENOM_EXP')
+    result = []
+
+    try:
+        response = fetch_data(url, query, headers, method)
+        app.logger.debug(response)
+
+        delegators = parse_grt_data(response.text)
+        app.logger.debug(f"Delegators: {delegators}")
+        if not isinstance(delegators, list):
+            app.logger.warning(f"parse_grt_data did not return a list: {delegators}")
+            return []
+
+        for delegator in delegators:
+            # app.logger.debug(f"Delegator: {delegator['id']}")
+            # app.logger.debug(f"Delegator: {delegator['stakedTokens']}")
+            bonded_amount = delegator['stakedTokens'] / 10**int(grt_denom)
+            result.append({
+                'id': delegator['id'],
+                'bondedAmount': bonded_amount
+            })
+
+        return result
+    except Exception as e:
+        app.logger.debug(f"An error occurred: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+def parse_grt_data(response_text):
+  #  app.logger.debug(f"Parsing data for {response_text}")
+    parsed_json = json.loads(response_text)
+   # app.logger.debug(f"Parsed json: {parsed_json}")
+    return parsed_json['data']['indexer']['delegators']
+
+def parse_lpt_data(response_text):
+    #app.logger.debug(f"Parsing data for {response_text}")
+    parsed_json = json.loads(response_text)
+  #  app.logger.debug(f"Parsed json: {parsed_json}")
+    return parsed_json['data']['transcoder']['delegators']
+
 def get_stake_data(delegator_stakes, prices, currency_id, blockchain, url, query, denom=1, source=DataSource, headers=None, special_address=None, method='POST'):
-    app.logger.debug("Retrieving stake data for " + blockchain)
-    app.logger.debug(f"delegator_stakes: {delegator_stakes}")
-    app.logger.debug(f"prices: {prices}")
-    app.logger.debug(f"currency_id: {currency_id}")
-    app.logger.debug(f"blockchain: {blockchain}")
-    app.logger.debug(f"url: {url}")
-    app.logger.debug(f"query: {query}")
-    app.logger.debug(f"denom: {denom}")
-    app.logger.debug(f"source: {source}")
+    #app.logger.debug("Retrieving stake data for " + blockchain)
+    #app.logger.debug(f"delegator_stakes: {delegator_stakes}")
+    #app.logger.debug(f"prices: {prices}")
+    #app.logger.debug(f"currency_id: {currency_id}")
+ #   #app.logger.debug(f"blockchain: {blockchain}")
+    #app.logger.debug(f"url: {url}")
+    #app.logger.debug(f"query: {query}")
+    #app.logger.debug(f"denom: {denom}")
+    #app.logger.debug(f"source: {source}")
     usd_price = fetch_price(prices, currency_id, source)
 
     total, tokens, count = 0, 0, 0
@@ -323,8 +689,19 @@ def get_stake_data(delegator_stakes, prices, currency_id, blockchain, url, query
 
     app.logger.debug(
         f"{tokens:.0f} {blockchain} staked by {count} delegators with value of ${total:.0f}")
+    
+def token_contract():
+        w3 = Web3(Web3.HTTPProvider(environ.get("INFURA_API")))
+        token_address = environ.get("TOKEN_ADDRESS")
+        with open(environ.get("TOKEN_ABI_JSON"), "r") as f:
+                    TOKEN_ABI = json.load(f)
+        return w3.eth.contract(address=token_address, abi=TOKEN_ABI)
 
+def decay_amount():
+    contract = token_contract()
+    return contract.functions.getDecayedAmount().call()
 
+    
 def calculate_price_by_blockchain(prices, blockchain):
 
     blockchain_symbol = swap_symbol_id(blockchain)
@@ -381,13 +758,59 @@ def fetch_cheqd_price():
     else:
         return f"Failed to get data from CoinGecko API. Status code: {response.status_code}"
 
+def treasury_contract():
+
+        app.logger.debug("Fetching test...")
+
+        app.logger.debug("Initializing Web3...")
+        w3 = Web3(Web3.HTTPProvider(environ.get("INFURA_API")))
+        app.logger.debug("Setting treasury address...")
+        treasury_address = environ.get("TREASURY_ADDRESS")
+
+        app.logger.debug("Initializing contract...")
+
+        with open(environ.get("TREASURY_ABI_JSON"), "r") as f:
+            TREASURY_ABI = json.load(f)
+
+        return w3.eth.contract(address=treasury_address, abi=TREASURY_ABI)
+
+def get_deposit_value(deposit, validator):
+    blockchain = validator[0]
+    if blockchain == 'LPT':
+        return deposit * lpt_price()
+    if blockchain == 'GRT':
+        return deposit * grt_price()
+
+def get_total_deposits():
+    # Assume the validators and depositors are known and are in these lists
+    contract = treasury_contract()
+    total_grt_deposited = contract.functions.totalGRTDeposited().call()
+    total_lpt_deposited = contract.functions.totalLPTDeposited().call()
+
+    app.logger.debug(f'Total GRT Deposited: {total_grt_deposited}')
+    app.logger.debug(f'Total LPT Deposited: {total_lpt_deposited}')
+
+    return total_grt_deposited, total_lpt_deposited
+
+def get_total_deposit_value():
+    # Assume the validators and depositors are known and are in these lists
+    grt_deposits, lpt_deposits = get_total_deposits()
+
+    return grt_deposits * grt_price() + lpt_deposits * lpt_price()
+
+def lpt_price():
+    prices = fetch_prices()
+    return prices['data']['LPT']['quote']['USD']['price']
+
+def grt_price():
+    prices = fetch_prices()
+    return prices['data']['GRT']['quote']['USD']['price']
 
 def fetch_prices():
     url = environ.get("COINMARKETCAP_BASE_URL")
     symbols = environ.get("COINMARKETCAP_SYMBOLS")
     api_key = environ.get("COINMARKETCAP_API_KEY")
 
-    app.logger.debug(f"URL IS: {url}")
     headers = {
         'Accepts': 'application/json',
         'X-CMC_PRO_API_KEY': api_key
@@ -400,8 +823,8 @@ def fetch_prices():
 
     try:
         response = requests.get(url, headers=headers, params=params)
-        app.logger.debug("Received HTTP %s: %s",
-                  response.status_code, response.json())
+     #   app.logger.debug("Received HTTP %s: %s",
+        #          response.status_code, response.json())ßs
         if response.status_code == 200:
             return response.json()
         else:
@@ -410,7 +833,6 @@ def fetch_prices():
             return {}
     except requests.exceptions.RequestException as e:
         app.logger.debug("Error: Could not fetch prices.")
-        app.logger.debug(str(e))
         return {}
 
 # Use total staked value for each delegator to update the leaderboard
@@ -492,23 +914,23 @@ def generate_summary():
         c = conn.cursor()
 
         # Execute SQL query to fetch all rows from the leaderboard table
-        c.execute("SELECT * FROM leaderboard where tokens_staked != 0")
+        c.execute("SELECT * FROM leaderboard")
         rows = c.fetchall()
 
         # Close the connection
         conn.close()
 
-        # Print the header
-        print(f"{'Address': <50}{'blockchain': <20}{'Tokens Deposited': <20}")
-        print("=" * 160)
+        #  app.logger.debug the header
+        app.logger.debug(f"{'Address': <50}{'blockchain': <20}{'Tokens Deposited': <20}")
+        app.logger.debug("=" * 160)
 
-        # Print each row in a nicely formatted manner with 2 decimal
+        # app.logger.debug each row in a nicely formatted manner with 2 decimal
         for row in rows:
             address, blockchain, treasury_contribution = row
-            print(f"{address: <50}{blockchain: <20}{treasury_contribution: <20.5f}")
+            app.logger.debug(f"{address: <50}{blockchain: <20}{treasury_contribution: <20.5f}")
 
     except sqlite3.Error as e:
-        print(f"Error in generate_summary: {e}")
+        app.logger.debug(f"Error in generate_summary: {e}")
 
 # Function to get a database connection
 
@@ -538,5 +960,5 @@ def get_max_rebate(address, blockchain, conn):
             return 0.0
 
     except sqlite3.Error as e:
-        print(f"Error in get_max_rebate: {e}")
+        app.logger.debug(f"Error in get_max_rebate: {e}")
         return 0.0  # Return 0 in case of an error
